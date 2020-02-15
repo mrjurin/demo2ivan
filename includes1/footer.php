@@ -292,12 +292,62 @@ $(document).ready(function(){
 					}
 			});
 	});  
+
+	function is_in_array(value, array){
+		for(var i = 0; i < array.length; i++){
+			if(array[i] == value)
+				return true;
+			else
+				return false;
+		}
+	}
+	function makeid(length) {
+		var result           = '';
+		var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+		var charactersLength = characters.length;
+		for ( var i = 0; i < length; i++ ) {
+			result += characters.charAt(Math.floor(Math.random() * charactersLength));
+		}
+		return result;
+	}
+
 	$("#transfer_to").focusout(function(){
 		var number = $('#transfer_to').val();
 		// alert(number.length);
 		// if(number.length >= 9 && number.length <= 14){
 		if(number.length >= 9 && number.length <= 12 && (number[0] == 1 || number[0]==6)){
-			$('.error-block-for-mobile').hide();   
+			$('.error-block-for-mobile').hide();
+			var partners = [];
+			$.get("./dashboard.php",{
+				q: 'getPartnersIds',
+				mobile: number,
+				id: makeid(16)
+			}, function(data){
+				partners = JSON.parse(data);
+				// console.log(partners);
+				var foundValues = 0;
+				$("#transfer_wallet_type_multiple option").each(function(){
+					var merchant = $(this).attr("s_merchant_id");
+					var is_in = ($.inArray(merchant, partners) == -1) ? false : true;
+					var name = $(this).val();
+					// console.log(is_in);
+					if(is_in){
+						$(".ms-drop input[value='" + name + "']").parent().parent().show();
+						// console.log($(this).val() + " is now showing");
+						foundValues++;
+					}else{
+						$(".ms-drop input[value='" + name + "']").parent().parent().hide();
+						// console.log($(this).val() + " is now hidden");
+					}
+					if(foundValues != 0){
+						$("#transfer_wallet_type_multiple").multipleSelect("enable");
+					}else{
+						$("#transfer_wallet_type_multiple").multipleSelect("disable");
+					}
+				});
+
+			});
+
 			$.ajax({  
 						url :'functions.php',
 						type:'POST',
@@ -313,6 +363,7 @@ $(document).ready(function(){
 										$('.intro_user').hide();
 										$('.user_info').show();
 										$('.user_name').html("Transfer to "+user_name);
+
 									}
 									else
 									{

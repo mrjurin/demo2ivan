@@ -5,14 +5,28 @@ if(!isset($_SESSION['login']))
 {
 	header("location:login.php");
 }
-	if(!empty($_GET['l'])){
-					 // extract($_GET);
-					 $merchant_id=$_GET['merchant_id'];
-					 $l=$_GET['l'];
-					$r_url="index.php?merchant_id=".$merchant_id."&l=".$l;
-					header("Location:$r_url"); 
-					
-			}
+if(!empty($_GET['l'])){
+	// extract($_GET);
+	$merchant_id=$_GET['merchant_id'];
+	$l=$_GET['l'];
+	$r_url="index.php?merchant_id=".$merchant_id."&l=".$l;
+	header("Location:$r_url"); 		
+}
+
+if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
+	$mobile = "60" . $_GET['mobile'];
+	$merchant_id = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id FROM users WHERE mobile_number = '$mobile' AND user_roles = '2' ORDER BY id ASC"))['id'];
+	if(!$merchant_id)
+		die(json_encode([]));
+	$sql = mysqli_query($conn, "SELECT user_id FROM unrecoginize_coin WHERE status=1 and merchant_id='$merchant_id'");
+
+	$result = [];
+	while($row = mysqli_fetch_assoc($sql)){
+		$result[] = $row['user_id'];
+	}
+	echo json_encode($result);
+	die();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en" style="" class="js flexbox flexboxlegacy canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths">
@@ -637,6 +651,7 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 		$("#transfer_wallet_type_multiple").multipleSelect({
 			selectAll: false
 		});
+		$("#transfer_wallet_type_multiple").multipleSelect("disable");
 
 		$("#multiple_wallet").on("change", function(){
 			var val = $(this).is(":checked");
