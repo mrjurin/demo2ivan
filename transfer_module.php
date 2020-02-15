@@ -550,7 +550,7 @@ if (isset($_POST['mobile_number'])) {
         $amount_index = 0;
         foreach($wallet_merchant_id as $coin => $m_id){
             $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
-            if(!$merchantaccept && $m_id != $receiver_id){
+            if(!$merchantaccept && $m_id != $receiver_id && $receiver['user_roles'] == 2){
                 $msg="This Number is Not Accepting ".$coin;
                 $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin);
                 echo json_encode($p_detail);
