@@ -14,6 +14,7 @@ if(!empty($_GET['l'])){
 }
 
 if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
+
 	$mobile = "60" . $_GET['mobile'];
 	$merchant_id = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id,user_roles FROM users WHERE mobile_number = '$mobile' ORDER BY id ASC"))['id'];
 	if($merchant_id['user_roles'] == 1){
@@ -31,6 +32,15 @@ if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
 	echo json_encode($result);
 	die();
 }
+
+function partnerbal($coin_merchant_id,$conn)
+{
+	$q="SELECT sum(coin_balance) as total_amount FROM `special_coin_wallet` inner join users on users.id=special_coin_wallet.user_id and users.user_roles='2' WHERE `merchant_id` ='$coin_merchant_id'";
+	
+	$parq=mysqli_query($conn,$q);  
+	$p_total=mysqli_fetch_assoc($parq);
+	return $p_total['total_amount'];
+} 
 ?>
 <!DOCTYPE html>
 <html lang="en" style="" class="js flexbox flexboxlegacy canvas canvastext webgl no-touch geolocation postmessage websqldatabase indexeddb hashchange history draganddrop websockets rgba hsla multiplebgs backgroundsize borderimage borderradius boxshadow textshadow opacity cssanimations csscolumns cssgradients cssreflections csstransforms csstransforms3d csstransitions fontface generatedcontent video audio localstorage sessionstorage webworkers applicationcache svg inlinesvg smil svgclippaths">

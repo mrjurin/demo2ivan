@@ -385,19 +385,20 @@ if (isset($_POST['mobile_number'])) {
                     }
                 }
 			    foreach($wallet_merchant_id as $m_id){
+                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
                     if($merchantaccept)
                     {
                         $totalcoin_a="SELECT sum(amount) as totalamount FROM tranfer WHERE MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) and receiver_id='$receiver_id' and coin_merchant_id='$m_id'";
-                        $totalcoin_b = "SELECT sum(transfer_multi_wallet.amount) as transferamount FROM tranfer INNER JOIN transfer_multi_wallet ON tranfer.coin_merchant_id = '0'  AND MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) AND tranfer.id = transfer_multi_wallet.transfer_id AND transfer_multi_wallet.merchant = '$m_id' AND transfer_multi_wallet.receiver = '$receiver_id'";
+                        $totalcoin_b = "SELECT sum(transfer_multi_wallet.amount) as totalamount FROM tranfer INNER JOIN transfer_multi_wallet ON tranfer.coin_merchant_id = '0'  AND MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) AND tranfer.id = transfer_multi_wallet.transfer_id AND transfer_multi_wallet.merchant = '$m_id' AND transfer_multi_wallet.receiver = '$receiver_id'";
                         $acceptedcoin_a = mysqli_fetch_assoc(mysqli_query($conn,$totalcoin_a));
                         $acceptedcoin_b = mysqli_fetch_assoc(mysqli_query($conn,$totalcoin_b));
-                        $acceptedcoin = floatval($acceptedcoin_a) + floatval($acceptedcoin_b);
-                        $totalamount = $acceptedcoin['totalamount'] + $amount;
+                        $acceptedcoin = floatval($acceptedcoin_a['totalamount']) + floatval($acceptedcoin_b['totalamount']);
+                        $totalamount = $acceptedcoin + $amount;
                         $coin_max_limit = $merchantaccept['coin_max_limit'];
                         $partnerbal = partnerbal($m_id,$conn);
                         $coin_limit = $merchantaccept['coin_limit'];
                         $limitclass = $coin_limit - $partnerbal;
-                        $pending_limit = $coin_max_limit - $acceptedcoin['totalamount'];
+                        $pending_limit = $coin_max_limit - $acceptedcoin;
                         if($limitclass <= $pending_limit)
                             $pending_limit = $limitclass;
                         // echo $pending_limit;
@@ -547,6 +548,9 @@ if (isset($_POST['mobile_number'])) {
                 }
 	} else
 	{
+	    if(!$multi_wallet)
+            $wallet_merchant_id = [$wallet_merchant_id];
+
         $amount_index = 0;
         foreach($wallet_merchant_id as $coin => $m_id){
             $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
@@ -714,9 +718,6 @@ if (isset($_POST['mobile_number'])) {
                     $sender_bal = $sender_usd;
                 } else {
                     // send from user
-                    if (!$multi_wallet) {
-                        $wallet_merchant_id = [$wallet_merchant_id]; // If there's only one merchant name, it will create an array with 1 position to enter the foreach loop
-                    }
                     //foreach ($wallet_merchant_id as $wallet_name => $merch_id) { // Loops through all the merchants names. $wallet_merchant_id = ['WALLET NAME' => 'MERCHANT ID']
                         $merchant_detail = mysqli_fetch_assoc(mysqli_query($conn, "SELECT name, special_coin_name FROM users WHERE id='" . $merchant_id . "'"));
 
