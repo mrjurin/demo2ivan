@@ -325,26 +325,34 @@ $(document).ready(function(){
 			}, function(data){
 				partners = JSON.parse(data);
 				// console.log(partners);
-				var foundValues = 0;
-				$("#transfer_wallet_type_multiple option").each(function(){
-					var merchant = $(this).attr("s_merchant_id");
-					var is_in = ($.inArray(merchant, partners) == -1) ? false : true;
-					var name = $(this).val();
-					// console.log(is_in);
-					if(is_in){
+				if(partners == 'show_all'){
+					$("#transfer_wallet_type_multiple option").each(function(){
+						var name = $(this).val();
 						$(".ms-drop input[value='" + name + "']").parent().parent().show();
-						// console.log($(this).val() + " is now showing");
-						foundValues++;
-					}else{
-						$(".ms-drop input[value='" + name + "']").parent().parent().hide();
-						// console.log($(this).val() + " is now hidden");
-					}
-					if(foundValues != 0){
-						$("#transfer_wallet_type_multiple").multipleSelect("enable");
-					}else{
-						$("#transfer_wallet_type_multiple").multipleSelect("disable");
-					}
-				});
+					});
+					$("#transfer_wallet_type_multiple").multipleSelect("enable");
+				}else{
+					var foundValues = 0;
+					$("#transfer_wallet_type_multiple option").each(function(){
+						var merchant = $(this).attr("s_merchant_id");
+						var is_in = ($.inArray(merchant, partners) == -1) ? false : true;
+						var name = $(this).val();
+						// console.log(is_in);
+						if(is_in){
+							$(".ms-drop input[value='" + name + "']").parent().parent().show();
+							// console.log($(this).val() + " is now showing");
+							foundValues++;
+						}else{
+							$(".ms-drop input[value='" + name + "']").parent().parent().hide();
+							// console.log($(this).val() + " is now hidden");
+						}
+						if(foundValues != 0){
+							$("#transfer_wallet_type_multiple").multipleSelect("enable");
+						}else{
+							$("#transfer_wallet_type_multiple").multipleSelect("disable");
+						}
+					});
+				}
 
 			});
 
