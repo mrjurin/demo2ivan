@@ -116,7 +116,7 @@ $(document).ready(function(){
 							wallet_merchant_id:wallet_merchant_id,
 							transfer_amount:transfer_amount,
 							wallet_type:transfer_wallet_type,
-							mobile_number:$('#transfer_to').val(), 
+							mobile_number: number, 
 							sender_id: "<?php echo $_SESSION['login'];?>",
 							multi_wallet: multiwallet
 						}, function (data){
@@ -318,13 +318,18 @@ $(document).ready(function(){
 		if(number.length >= 9 && number.length <= 12 && (number[0] == 1 || number[0]==6)){
 			$('.error-block-for-mobile').hide();
 			var partners = [];
+			
+			if(number.substring(0,2) == 60){
+				number = number.substring(2);
+			}
+
 			$.get("./dashboard.php",{
 				q: 'getPartnersIds',
 				mobile: number,
 				id: makeid(16)
 			}, function(data){
 				partners = JSON.parse(data);
-				// console.log(partners);
+				console.log(partners);
 				if(partners == 'show_all'){
 					$("#transfer_wallet_type_multiple option").each(function(){
 						var name = $(this).val();
@@ -337,20 +342,21 @@ $(document).ready(function(){
 						var merchant = $(this).attr("s_merchant_id");
 						var is_in = ($.inArray(merchant, partners) == -1) ? false : true;
 						var name = $(this).val();
-						// console.log(is_in);
+						console.log(merchant);
 						if(is_in){
 							$(".ms-drop input[value='" + name + "']").parent().parent().show();
-							// console.log($(this).val() + " is now showing");
+							console.log($(this).val() + " is now showing");
 							foundValues++;
 						}else{
 							$(".ms-drop input[value='" + name + "']").parent().parent().hide();
-							// console.log($(this).val() + " is now hidden");
+							console.log($(this).val() + " is now hidden");
 						}
 						if(foundValues != 0){
 							$("#transfer_wallet_type_multiple").multipleSelect("enable");
 						}else{
 							$("#transfer_wallet_type_multiple").multipleSelect("disable");
 						}
+						console.log("-------------");
 					});
 				}
 
