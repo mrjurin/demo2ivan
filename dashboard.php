@@ -85,11 +85,6 @@ function partnerbal($coin_merchant_id,$conn)
 			color:red;
 		}
 
-		#fund_wallet_input_modal .modal-body{
-			max-height: 60vh;
-			overflow-y: auto;
-		}
-
 	</style>
 
 	<!-- Manifest -->
@@ -711,6 +706,9 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 			var amount = $("#transfer_amount").val();
 			var total = amount;
 			$("#wallet_amounts .form-group").each(function(){
+				if(total <= 0){
+					return false;
+				}
 				var max = $(this).attr("data-amount");
 				if(max > total){
 					$(this).find("input").val(total);
