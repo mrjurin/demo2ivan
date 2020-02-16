@@ -84,6 +84,12 @@ function partnerbal($coin_merchant_id,$conn)
 			font-weight:bold;
 			color:red;
 		}
+
+		#fund_wallet_input_modal .modal-body{
+			max-height: 60vh;
+			overflow-y: auto;
+		}
+
 	</style>
 
 	<!-- Manifest -->
@@ -562,6 +568,10 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 							</div>
 
 							<div class="mb-2">
+								<button id="autofill-wallets" style="display: none;" class="btn btn-primary">Autofill</button>
+							</div>
+
+							<div class="mb-2">
 								<input type="checkbox" name="multiple_wallet" id="multiple_wallet">
 								<label for="multiple_wallet">Use more than one wallet</label>
 							</div>
@@ -682,16 +692,36 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 
 		$("#multiple_wallet").on("change", function(){
 			var val = $(this).is(":checked");
-			$(".transfer_amount").prop("disabled", val);
 			if(val == true){
 				$("#transfer_wallet_type").parent().hide();
 				$("#transfer_wallet_type_multiple").parent().show();
 				$("#wallet_amounts").show();
+				$("#autofill-wallets").show();
 			}else{
 				$("#transfer_wallet_type").parent().show();
 				$("#wallet_amounts").hide();
 				$("#transfer_wallet_type_multiple").parent().hide();
+				$("#autofill-wallets").hide();
 			}
+		});
+
+		$("#autofill-wallets").on("click", function(e){
+			e.preventDefault();
+
+			var amount = $("#transfer_amount").val();
+			var total = amount;
+			$("#wallet_amounts .form-group").each(function(){
+				var max = $(this).attr("data-amount");
+				if(max > total){
+					$(this).find("input").val(total);
+					total -= max;
+				}else{
+					$(this).find("input").val(max);
+					total -= max;
+				}
+			});
+
+
 		});
 
 		$("#transfer_wallet_type_multiple").on("change", function(){
