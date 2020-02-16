@@ -16,12 +16,14 @@ if(!empty($_GET['l'])){
 if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
 
 	$mobile = "60" . $_GET['mobile'];
-	$merchant_id = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id,user_roles FROM users WHERE mobile_number = '$mobile' ORDER BY id ASC"))['id'];
-	if($merchant_id['user_roles'] == 1){
+	$merchant_id = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id,user_roles FROM users WHERE mobile_number = '$mobile' ORDER BY id ASC"));
+	if($merchant_id['user_roles'] == '1'){
 		die(json_encode('show_all'));
 	}
 	if(!$merchant_id)
 		die(json_encode([]));
+
+	$merchant_id = $merchant_id['id'];
 	// $sql = mysqli_query($conn, "SELECT user_id FROM unrecoginize_coin WHERE status=1 and merchant_id='$merchant_id' LIMIT 1");
 	$sql = mysqli_query($conn, "select merchant_id from unrecoginize_coin inner join users on users.id=unrecoginize_coin.merchant_id where unrecoginize_coin.user_id='$merchant_id' and status=1 order by unrecoginize_coin.id desc");
 
