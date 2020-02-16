@@ -17,22 +17,33 @@ if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
 
 	$mobile = "60" . $_GET['mobile'];
 	$merchant_id = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id,user_roles FROM users WHERE mobile_number = '$mobile' ORDER BY id ASC"));
-	if($merchant_id['user_roles'] == '1'){
-		die(json_encode('show_all'));
-	}
+
 	if(!$merchant_id)
 		die(json_encode([]));
 
-	$merchant_id = $merchant_id['id'];
-	// $sql = mysqli_query($conn, "SELECT user_id FROM unrecoginize_coin WHERE status=1 and merchant_id='$merchant_id' LIMIT 1");
-	$sql = mysqli_query($conn, "select merchant_id from unrecoginize_coin inner join users on users.id=unrecoginize_coin.merchant_id where unrecoginize_coin.user_id='$merchant_id' and status=1 order by unrecoginize_coin.id desc");
+	if($merchant_id['user_roles'] == '1'){
+		die(json_encode('show_all'));
+	}else{
+		
+		$merchant_id = $merchant_id['id'];
+		// $sql = mysqli_query($conn, "SELECT user_id FROM unrecoginize_coin WHERE status=1 and merchant_id='$merchant_id' LIMIT 1");
+		$sql = mysqli_query($conn, "select merchant_id from unrecoginize_coin inner join users on users.id=unrecoginize_coin.merchant_id where unrecoginize_coin.user_id='$merchant_id' and status=1 order by unrecoginize_coin.id desc");
+	
+		$result = [];
+		while($row = mysqli_fetch_assoc($sql)){
+			$result[] = $row['merchant_id'];
+		}
+	
+		$own_coin = mysqli_fetch_assoc(mysqli_query($conn, "SELECT balance_usd,balance_myr, balance_inr FROM users WHERE id = '$merchant_id'"));
+	
+		if(floatval($own_coin['balance_usd']) > 0 || floatval($own_coin['balance_myr']) > 0 || floatval($own_coin['balance_inr']) > 0){
+			$result[] = $merchant_id;
+		}
 
-	$result = [];
-	while($row = mysqli_fetch_assoc($sql)){
-		$result[] = $row['merchant_id'];
+		echo json_encode($result);
+		die();
+
 	}
-	echo json_encode($result);
-	die();
 }
 
 function partnerbal($coin_merchant_id,$conn)
