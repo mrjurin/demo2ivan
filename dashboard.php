@@ -533,7 +533,8 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 									if(count($all_wallet)>0){
 										// print_R($all_wallet);
 										
-							foreach($all_wallet as $wal){ if($wal['coin_balance']){?>
+							foreach($all_wallet as $wal){ 
+								if($wal['coin_balance']){?>
 									<option  s_merchant_id="<?php echo $wal['merchant_id'];?>" wallet_label="dynamic" merchant_no="<?php echo $wal['merchant_no']; ?>"  value="<?php  echo $wal['special_coin_name'];?>"><?php  echo $wal['special_coin_name']."- <b>".number_format($wal['coin_balance'],2)."</b>";?></option>  
 							<?php }} } ?>
 								</select>
@@ -703,19 +704,20 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 		$("#autofill-wallets").on("click", function(e){
 			e.preventDefault();
 
-			var amount = $("#transfer_amount").val();
+			var amount = parseFloat($("#transfer_amount").val());
 			var total = amount;
 			$("#wallet_amounts .form-group").each(function(){
 				if(total <= 0){
-					return false;
-				}
-				var max = $(this).attr("data-amount");
-				if(max > total){
-					$(this).find("input").val(total);
-					total -= max;
+					$(this).find("input").val(0);
 				}else{
-					$(this).find("input").val(max);
-					total -= max;
+					var max = parseFloat($(this).attr("data-amount"));
+					if(max > total){
+						$(this).find("input").val(total.toFixed(2));
+						total -= max;
+					}else{
+						$(this).find("input").val(max.toFixed(2));
+						total -= max;
+					}
 				}
 			});
 
