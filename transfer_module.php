@@ -348,103 +348,102 @@ if (isset($_POST['mobile_number'])) {
 	$rmoengage_unique_id= $receiver['moengage_unique_id'];
 	$sender_query = 'UPDATE users SET ';
 	$receiver_query = 'UPDATE users SET ';
-	if (in_array($wallet_type, $fixwallet))  
-	{
-		if ($wallet_type == 'MYR') {
-			$sender_bal=$sender_myr = floatval($sender_myr) - floatval($amount);
-			$receiver_bal=$receiver_myr = floatval($receiver_myr) + floatval($amount);
-			$sender_query = $sender_query.'balance_myr="'.$sender_myr.'" ';
-			$receiver_query = $receiver_query.'balance_myr="'.$receiver_myr.'" ';
-		}
-		if ($wallet_type == 'INR') {
-			$sender_bal=$sender_inr = floatval($sender_inr) - floatval($amount);
-			$receiver_bal=$receiver_inr = floatval($receiver_inr) + floatval($amount);
-			$sender_query = $sender_query.'balance_inr="'.$sender_inr.'" ';
-			$receiver_query = $receiver_query.'balance_inr="'.$receiver_inr.'" ';
-		}
-		if ($wallet_type == 'CF') {
-			$sender_bal=$sender_usd = floatval($sender_usd) - floatval($amount);
-			$receiver_bal=$receiver_usd = floatval($receiver_usd) + floatval($amount);
-			$sender_query = $sender_query.'balance_usd="'.$sender_usd.'" ';
-			$receiver_query = $receiver_query.'balance_usd="'.$receiver_usd.'" ';
-		}  
-		
-		$sender_query = $sender_query.' WHERE id='.$sender_id;
-		
-		// amount to credit in reciver  wallet with special coin 
 
-		if($receiver['user_roles']==2 && $new_coin_trasfer!="y")
-			{
-			    foreach($wallet_merchant_id as $m_id){
-                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
-                    if(!$merchantaccept){
-                        $msg="This Number is Not Accepting ".$coin_name;
-                        $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin_name);
+	if(!$multi_wallet){
+	    $wallet_merchant_id = [$wallet_type => $wallet_merchant_id];
+    }
+
+    if(!$multi_wallet)
+        $amount = [$amount];
+
+    $amount_index_g = 0;
+    foreach($wallet_merchant_id as $coin => $merchant) {
+
+        if (in_array($coin, $fixwallet)) {
+            if ($coin == 'MYR') {
+                $sender_bal = $sender_myr = floatval($sender_myr) - floatval($amount[$amount_index_g]);
+                $receiver_bal = $receiver_myr = floatval($receiver_myr) + floatval($amount[$amount_index_g]);
+                $sender_query = $sender_query . 'balance_myr="' . $sender_myr . '" ';
+                $receiver_query = $receiver_query . 'balance_myr="' . $receiver_myr . '" ';
+            }
+            if ($coin == 'INR') {
+                $sender_bal = $sender_inr = floatval($sender_inr) - floatval($amount[$amount_index_g]);
+                $receiver_bal = $receiver_inr = floatval($receiver_inr) + floatval($amount[$amount_index_g]);
+                $sender_query = $sender_query . 'balance_inr="' . $sender_inr . '" ';
+                $receiver_query = $receiver_query . 'balance_inr="' . $receiver_inr . '" ';
+            }
+            if ($coin == 'CF') {
+                $sender_bal = $sender_usd = floatval($sender_usd) - floatval($amount[$amount_index_g]);
+                $receiver_bal = $receiver_usd = floatval($receiver_usd) + floatval($amount[$amount_index_g]);
+                $sender_query = $sender_query . 'balance_usd="' . $sender_usd . '" ';
+                $receiver_query = $receiver_query . 'balance_usd="' . $receiver_usd . '" ';
+            }
+
+            $sender_query = $sender_query . ' WHERE id=' . $sender_id;
+
+            // amount to credit in reciver  wallet with special coin
+
+            if ($receiver['user_roles'] == 2 && $new_coin_trasfer != "y") {
+                foreach ($wallet_merchant_id as $m_id) {
+                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='" . $m_id . "' and user_id='" . $receiver_id . "'"));
+                    if (!$merchantaccept) {
+                        $msg = "This Number is Not Accepting " . $coin_name;
+                        $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
                         echo json_encode($p_detail);
                         die;
                     }
                 }
-			    foreach($wallet_merchant_id as $m_id){
-                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
-                    if($merchantaccept)
-                    {
-                        $totalcoin_a="SELECT sum(amount) as totalamount FROM tranfer WHERE MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) and receiver_id='$receiver_id' and coin_merchant_id='$m_id'";
+                $amount_index = 0;
+                foreach ($wallet_merchant_id as $m_id) {
+                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='" . $m_id . "' and user_id='" . $receiver_id . "'"));
+                    if ($merchantaccept) {
+                        $totalcoin_a = "SELECT sum(amount) as totalamount FROM tranfer WHERE MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) and receiver_id='$receiver_id' and coin_merchant_id='$m_id'";
                         $totalcoin_b = "SELECT sum(transfer_multi_wallet.amount) as totalamount FROM tranfer INNER JOIN transfer_multi_wallet ON tranfer.coin_merchant_id = '0'  AND MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) AND tranfer.id = transfer_multi_wallet.transfer_id AND transfer_multi_wallet.merchant = '$m_id' AND transfer_multi_wallet.receiver = '$receiver_id'";
-                        $acceptedcoin_a = mysqli_fetch_assoc(mysqli_query($conn,$totalcoin_a));
-                        $acceptedcoin_b = mysqli_fetch_assoc(mysqli_query($conn,$totalcoin_b));
+                        $acceptedcoin_a = mysqli_fetch_assoc(mysqli_query($conn, $totalcoin_a));
+                        $acceptedcoin_b = mysqli_fetch_assoc(mysqli_query($conn, $totalcoin_b));
                         $acceptedcoin = floatval($acceptedcoin_a['totalamount']) + floatval($acceptedcoin_b['totalamount']);
-                        $totalamount = $acceptedcoin + $amount;
+                        $totalamount = $acceptedcoin + $amount[$amount_index_g];
                         $coin_max_limit = $merchantaccept['coin_max_limit'];
-                        $partnerbal = partnerbal($m_id,$conn);
+                        $partnerbal = partnerbal($m_id, $conn);
                         $coin_limit = $merchantaccept['coin_limit'];
                         $limitclass = $coin_limit - $partnerbal;
                         $pending_limit = $coin_max_limit - $acceptedcoin;
-                        if($limitclass <= $pending_limit)
+                        if ($limitclass <= $pending_limit)
                             $pending_limit = $limitclass;
                         // echo $pending_limit;
                         // die;
-                        if($pending_limit > 0)
-                        {
+                        if ($pending_limit > 0) {
 
-                            if($amount > $pending_limit)
-                            {
+                            if ($amount[$amount_index] > $pending_limit) {
 
-                                $pending_limit = number_format($pending_limit,2);
-                                $msg="The maximum limit to accept is only ".$pending_limit." for {$coin_name}, please transfer a lower amount";
-                                $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin_name);
+                                $pending_limit = number_format($pending_limit, 2);
+                                $msg = "The maximum limit to accept is only " . $pending_limit . " for {$coin_name}, please transfer a lower amount";
+                                $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
                                 echo json_encode($p_detail);
                                 die;
                             }
-                            if($limitclass<=0)
-                            {
-                                $p_detail=array('status'=>false,'msg'=>$max_limit_msg,'coin_name'=>$coin_name);
+                            if ($limitclass <= 0) {
+                                $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin_name);
                                 echo json_encode($p_detail);
                                 die;
-                            }
-                            else
-                            {
-                                $max_check=$limitclass;
+                            } else {
+                                $max_check = $limitclass;
                                 // echo $limitclass;
                                 // echo $max_check;
                                 // die;
-                                if($totalamount>$max_check)
-                                {
-                                    if($limitclass<$pending_limit)
-                                        $pending_limit=$limitclass;
-                                    if($limitclass<$pending_limit)
-                                        $pending_limit=$limitclass;
-                                    if($pending_limit!=$amount && $pending_limit<$amount)
-                                    {
-                                        if($pending_limit>0)
-                                        {
-                                            $pending_limit=number_format($pending_limit,2);
-                                            $msg="The maximum limit to accept is only ".$pending_limit." for {$coin_name}, please transfer a lower amount";
+                                if ($totalamount > $max_check) {
+                                    if ($limitclass < $pending_limit)
+                                        $pending_limit = $limitclass;
+                                    if ($limitclass < $pending_limit)
+                                        $pending_limit = $limitclass;
+                                    if ($pending_limit != $amount && $pending_limit < $amount) {
+                                        if ($pending_limit > 0) {
+                                            $pending_limit = number_format($pending_limit, 2);
+                                            $msg = "The maximum limit to accept is only " . $pending_limit . " for {$coin_name}, please transfer a lower amount";
+                                        } else {
+                                            $msg = $max_limit_msg;
                                         }
-                                        else
-                                        {
-                                            $msg=$max_limit_msg;
-                                        }
-                                        $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin_name);
+                                        $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
 
                                         echo json_encode($p_detail);
                                         die;
@@ -455,270 +454,255 @@ if (isset($_POST['mobile_number'])) {
                             }
                         }
 
-                    }
-                    else
-                    {
-                        $msg="This Number is Not Accepting ".$coin_name;
-                        $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin_name);
+                    } else {
+                        $msg = "This Number is Not Accepting " . $coin_name;
+                        $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
                         echo json_encode($p_detail);
                         die;
                     }
-
+                    $amount_index++;
                 } // end foreach loop
 
-			} // end if()
-			
-			// if($receiver['user_roles']==1 || $merchant_special_case=="y" || $new_coin_trasfer=="y")
-			// {
-                foreach($wallet_merchant_id as $m_id){
-                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
-                    if(!$merchantaccept){
-                        $msg="This Number is Not Accepting ".$coin_name;
-                        $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin_name);
-                        echo json_encode($p_detail);
-                        die;
-                    }
+            } // end if()
+
+            // if($receiver['user_roles']==1 || $merchant_special_case=="y" || $new_coin_trasfer=="y")
+            // {
+            foreach ($wallet_merchant_id as $m_id) {
+                $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='" . $m_id . "' and user_id='" . $receiver_id . "'"));
+                if (!$merchantaccept && $receiver_user_roles == 2) {
+                    $msg = "This Number is Not Accepting " . $coin_name;
+                    $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
+                    echo json_encode($p_detail);
+                    die;
                 }
-
-                foreach($wallet_merchant_id as $coin => $merchant){
-
-                    $special_coin=mysqli_fetch_assoc(mysqli_query($conn,"select * from special_coin_wallet where user_id='$receiver_id' and merchant_id='$merchant'"));
-                    if($special_coin['id'])
-                    {
-
-                        $receiver_bal=$receiver_amount=$new_coin=$special_coin['coin_balance']+$amount;
-                        $total_added=$special_coin['added_balance']+$amount;
-                        // echo "update special_coin_wallet set coin_balance='$new_coin' where user_id='$receiver_id' and merchant_id='$sender_id'";
-                        // die;
-                        // echo "update special_coin_wallet set coin_balance='$new_coin',added_balance='$total_added' where user_id='$receiver_id' and merchant_id='$sender_id'";
-                        // die;
-                        $q2=mysqli_query($conn,"update special_coin_wallet set coin_balance='$new_coin',added_balance='$total_added' where user_id='$receiver_id' and merchant_id='$merchant'");
-
-
-                    }
-                    else
-                    {
-                        // make new entry
-                        // echo "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance) VALUES ('$receiver_id', '$sender_id', '$amount')";
-
-
-                        if($new_coin_trasfer=="y")
-                        {
-                            $login_token = generatePIN();
-                            $cm=$receiver['mobile_number'];
-                            // echo "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'";
-                            // die;
-                            mysqli_query($conn,"UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'");
-                            if($cm)
-                            {
-                                if($receiver_user_roles==2)
-                                {
-                                    $m_url="https://www.koofamilies.com?merchant_id=".$merchant."&l=".$login_token."&t=".$amount;
-                                    // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
-                                    // $msg="My dear friend, I ".$sender_name." have a gift voucher of RM".$amount." of ".$mer_name." for you. You can get it by clicking on the links. ".$m_url." . Enjoy my gift to you !!!";
-                                    $msg="Hello, i am from ".$sender_name.". I would like to invite you to join our community. Kindly accept my invitation by clicking on the following link.".$m_url;
-                                }
-                                else
-                                {
-                                    $m_url="https://www.koofamilies.com/structure_merchant.php?merchant_id=".$merchant."&l=".$login_token."&t=".$amount;
-                                    // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
-                                    $msg="My dear friend, I ".$sender_name." have a gift voucher of RM".$amount." of ".$mer_name." for you. You can get it by clicking on the links. ".$m_url." . Enjoy my gift to you !!!";
-                                }
-                                $details="Welcome Wallet Transfer";
-                                gw_send_sms("APIHKXVL33N5E", "APIHKXVL33N5EHKXVL", "9787136232", "$cm", "$msg");
-                            }
-
-
-                        }
-                        $q2=mysqli_query($conn,"INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance,added_balance,user_mobile,coin_active,ref_coin) VALUES ('$receiver_id', '$merchant','$amount','$amount','$receiver_mobile','$coin_active','$ref_coin')");
-                        // $sender_amount=$amount;
-                        $receiver_bal=$receiver_amount;
-
-                    }
-                    // }
-
-
-                    if($q2)
-                        $q1=mysqli_query($conn, $sender_query);
-
-                    // $receiver_query = $receiver_query.' WHERE id='.$receiver_id;
-                    // $q2=mysqli_query($conn, $receiver_query);
-                    if($q1 && $q2)
-                        $t_flag=true;
-                }
-	} else
-	{
-	    if(!$multi_wallet)
-            $wallet_merchant_id = [$wallet_merchant_id];
-
-        $amount_index = 0;
-        foreach($wallet_merchant_id as $coin => $m_id){
-            $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='".$m_id."' and user_id='".$receiver_id."'"));
-            if(!$merchantaccept && $m_id != $receiver_id && $receiver['user_roles'] == 2){
-                $msg="This Number is Not Accepting ".$coin;
-                $p_detail=array('status'=>false,'msg'=>$msg,'coin_name'=>$coin);
-                echo json_encode($p_detail);
-                die;
             }
 
-            if ($receiver['user_roles'] == 2 && $new_coin_trasfer != "y") {
-                // check merchant limit for that coin
+            $special_coin = mysqli_fetch_assoc(mysqli_query($conn, "select * from special_coin_wallet where user_id='$receiver_id' and merchant_id='$merchant'"));
+            if ($special_coin['id']) {
 
-                $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='" . $m_id . "' and user_id='" . $receiver_id . "'"));
-                if ($merchantaccept) {
-                    $totalcoin_a = "SELECT sum(amount) as totalamount FROM tranfer WHERE MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) and receiver_id='$receiver_id' and coin_merchant_id='$m_id'";
-                    $totalcoin_b = "SELECT sum(transfer_multi_wallet.amount) as totalamount FROM tranfer INNER JOIN transfer_multi_wallet ON tranfer.coin_merchant_id = '0'  AND MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) AND tranfer.id = transfer_multi_wallet.transfer_id AND transfer_multi_wallet.merchant = '$m_id' AND transfer_multi_wallet.receiver = '$receiver_id'";
-                    $acceptedcoin_a = mysqli_fetch_assoc(mysqli_query($conn, $totalcoin_a));
-                    $acceptedcoin_b = mysqli_fetch_assoc(mysqli_query($conn, $totalcoin_b));
-                    $acceptedcoin = floatval($acceptedcoin_a['totalamount']) + floatval($acceptedcoin_b['totalamount']);
-                    $totalamount = $acceptedcoin + $amount[$amount_index];
-                    $coin_max_limit = $merchantaccept['coin_max_limit'];
-                    $partnerbal = partnerbal($m_id, $conn);
-                    $coin_limit = $merchantaccept['coin_limit'];
-                    $limitclass = $coin_limit - $partnerbal;
-                    $pending_limit = $coin_max_limit - $acceptedcoin['totalamount'];
-                    if ($limitclass <= $pending_limit)
-                        $pending_limit = $limitclass;
-                    // echo $pending_limit;
+                $receiver_bal = $receiver_amount = $new_coin = $special_coin['coin_balance'] + $amount[$amount_index_g];
+                $total_added = $special_coin['added_balance'] + $amount[$amount_index_g];
+                // echo "update special_coin_wallet set coin_balance='$new_coin' where user_id='$receiver_id' and merchant_id='$sender_id'";
+                // die;
+                // echo "update special_coin_wallet set coin_balance='$new_coin',added_balance='$total_added' where user_id='$receiver_id' and merchant_id='$sender_id'";
+                // die;
+                $q2 = mysqli_query($conn, "update special_coin_wallet set coin_balance='$new_coin',added_balance='$total_added' where user_id='$receiver_id' and merchant_id='$merchant'");
+
+
+            } else {
+                // make new entry
+                // echo "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance) VALUES ('$receiver_id', '$sender_id', '$amount')";
+
+
+                if ($new_coin_trasfer == "y") {
+                    $login_token = generatePIN();
+                    $cm = $receiver['mobile_number'];
+                    // echo "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'";
                     // die;
-                    if ($pending_limit > 0) {
-
-                        if ($amount[$amount_index] > $pending_limit) {
-
-                            $pending_limit = number_format($pending_limit, 2);
-                            $msg = "The maximum limit to accept is only " . $pending_limit . ", please transfer a lower amount for " . $coin;
-                            $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
-                            echo json_encode($p_detail);
-                            die;
-                        }
-                        if ($limitclass <= 0) {
-                            $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin_name);
-                            echo json_encode($p_detail);
-                            die;
+                    mysqli_query($conn, "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'");
+                    if ($cm) {
+                        if ($receiver_user_roles == 2) {
+                            $m_url = "https://www.koofamilies.com?merchant_id=" . $merchant . "&l=" . $login_token . "&t=" . $amount;
+                            // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
+                            // $msg="My dear friend, I ".$sender_name." have a gift voucher of RM".$amount." of ".$mer_name." for you. You can get it by clicking on the links. ".$m_url." . Enjoy my gift to you !!!";
+                            $msg = "Hello, i am from " . $sender_name . ". I would like to invite you to join our community. Kindly accept my invitation by clicking on the following link." . $m_url;
                         } else {
-                            $max_check = $limitclass;
-                            // echo $totalamount;
-                            // echo $max_check;
-                            // die;
-                            if ($totalamount > $max_check) {
-                                if ($limitclass < $pending_limit)
-                                    $pending_limit = $limitclass;
-                                if ($pending_limit != $amount[$amount_index] && $pending_limit < $amount[$amount_index]) {
-                                    if ($pending_limit > 0) {
-                                        $pending_limit = number_format($pending_limit, 2);
-                                        $msg = "The maximum limit to accept is only " . $pending_limit . ", please transfer a lower amount";
-                                    } else {
-                                        $msg = $max_limit_msg;
-                                    }
-                                    $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
-
-                                    echo json_encode($p_detail);
-                                    die;
-                                }
-
-                            }
-
+                            $m_url = "https://www.koofamilies.com/structure_merchant.php?merchant_id=" . $merchant . "&l=" . $login_token . "&t=" . $amount;
+                            // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
+                            $msg = "My dear friend, I " . $sender_name . " have a gift voucher of RM" . $amount . " of " . $mer_name . " for you. You can get it by clicking on the links. " . $m_url . " . Enjoy my gift to you !!!";
                         }
-                    } else {
-                        $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin_name);
-                        echo json_encode($p_detail);
-                        die;
+                        $details = "Welcome Wallet Transfer";
+                        gw_send_sms("APIHKXVL33N5E", "APIHKXVL33N5EHKXVL", "9787136232", "$cm", "$msg");
                     }
 
-                } else {
+
+                }
+                $q2 = mysqli_query($conn, "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance,added_balance,user_mobile,coin_active,ref_coin) VALUES ('$receiver_id', '$merchant','$amount[$amount_index_g]','$amount','$receiver_mobile','$coin_active','$ref_coin')");
+                // $sender_amount=$amount;
+                $receiver_bal = $receiver_amount;
+
+            }
+            // }
+
+
+            if ($q2)
+                $q1 = mysqli_query($conn, $sender_query);
+
+            // $receiver_query = $receiver_query.' WHERE id='.$receiver_id;
+            // $q2=mysqli_query($conn, $receiver_query);
+            if ($q1 && $q2)
+                $t_flag = true;
+
+        } else {
+
+            $amount_index = 0;
+            foreach ($wallet_merchant_id as $coin => $m_id) {
+                $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='" . $m_id . "' and user_id='" . $receiver_id . "'"));
+                if (!$merchantaccept && $m_id != $receiver_id && $receiver['user_roles'] == 2) {
                     $msg = "This Number is Not Accepting " . $coin;
                     $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin);
                     echo json_encode($p_detail);
                     die;
                 }
-            }
-            $amount_index++;
-        }
-	    $amount_index = 0;
-        foreach($wallet_merchant_id as $coin => $merchant_id) {
 
-            if ($merchant_id == $receiver_id) {
+                if ($receiver['user_roles'] == 2 && $new_coin_trasfer != "y") {
+                    // check merchant limit for that coin
 
-                // coin trasfer to owner of coin holder
-                $special_coin_sender = mysqli_fetch_assoc(mysqli_query($conn, "select * from special_coin_wallet where user_id='$sender_id' and merchant_id='$merchant_id'"));
-                $s_wallet_id = $special_coin_sender['id'];
-                $sender_bal = $sender_amount = floatval($special_coin_sender['coin_balance']) - floatval($amount[$amount_index]);
-                $q1 = mysqli_query($conn, "update special_coin_wallet set coin_balance='$sender_bal' where id='$s_wallet_id'");
-                // increase merchant bal
-                $receiver_bal = $receiver_usd = floatval($receiver_usd) + floatval($amount[$amount_index]);
-                $receiver_query = $receiver_query . 'balance_usd="' . $receiver_usd . '" ';
-                $receiver_query = $receiver_query . ' WHERE id=' . $receiver_id;
-                // die;
-                $q2 = mysqli_query($conn, $receiver_query);
-                if ($q1 && $q2)
-                    $t_flag = true;
-            } else {
-
-
-                // echo "dd";
-                // die;
-
-                // trasfer to other
-
-                if ($merchant_send == "y") {
-                    $merchant_detail = mysqli_fetch_assoc(mysqli_query($conn, "SELECT name FROM users WHERE id='" . $merchant_id . "'"));
-                    // $mer_bal=
-                    $s_coin_name = $merchant_detail['special_coin_name'];
-                    $mer_name = $merchant_detail['name'];
-                    $special_coin = mysqli_fetch_assoc(mysqli_query($conn, "select * from special_coin_wallet where user_id='$receiver_id' and merchant_id='$merchant_id'"));
-                    // $sender_usd=$sender_usd-$amount;
-
-                    if ($special_coin['id']) {
-
-                        $receiver_bal = $receiver_amount = $new_coin = $special_coin['coin_balance'] + $amount;
-                        $total_added = $special_coin['added_balance'] + $amount;
-                        // echo "update special_coin_wallet set coin_balance='$new_coin' where user_id='$receiver_id' and merchant_id='$sender_id'";
+                    $merchantaccept = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM unrecoginize_coin WHERE status=1 and merchant_id='" . $m_id . "' and user_id='" . $receiver_id . "'"));
+                    if ($merchantaccept) {
+                        $totalcoin_a = "SELECT sum(amount) as totalamount FROM tranfer WHERE MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) and receiver_id='$receiver_id' and coin_merchant_id='$m_id'";
+                        $totalcoin_b = "SELECT sum(transfer_multi_wallet.amount) as totalamount FROM tranfer INNER JOIN transfer_multi_wallet ON tranfer.coin_merchant_id = '0'  AND MONTH(created_date) = MONTH(CURRENT_DATE()) AND YEAR(created_date) = YEAR(CURRENT_DATE()) AND tranfer.id = transfer_multi_wallet.transfer_id AND transfer_multi_wallet.merchant = '$m_id' AND transfer_multi_wallet.receiver = '$receiver_id'";
+                        $acceptedcoin_a = mysqli_fetch_assoc(mysqli_query($conn, $totalcoin_a));
+                        $acceptedcoin_b = mysqli_fetch_assoc(mysqli_query($conn, $totalcoin_b));
+                        $acceptedcoin = floatval($acceptedcoin_a['totalamount']) + floatval($acceptedcoin_b['totalamount']);
+                        $totalamount = $acceptedcoin + $amount[$amount_index];
+                        $coin_max_limit = $merchantaccept['coin_max_limit'];
+                        $partnerbal = partnerbal($m_id, $conn);
+                        $coin_limit = $merchantaccept['coin_limit'];
+                        $limitclass = $coin_limit - $partnerbal;
+                        $pending_limit = $coin_max_limit - $acceptedcoin['totalamount'];
+                        if ($limitclass <= $pending_limit)
+                            $pending_limit = $limitclass;
+                        // echo $pending_limit;
                         // die;
+                        if ($pending_limit > 0) {
 
-                        $q1 = mysqli_query($conn, "update special_coin_wallet set coin_balance='$new_coin',added_balance='$total_added' where user_id='$receiver_id' and merchant_id='$merchant_id'");
+                            if ($amount[$amount_index] > $pending_limit) {
 
+                                $pending_limit = number_format($pending_limit, 2);
+                                $msg = "The maximum limit to accept is only " . $pending_limit . ", please transfer a lower amount for " . $coin;
+                                $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
+                                echo json_encode($p_detail);
+                                die;
+                            }
+                            if ($limitclass <= 0) {
+                                $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin_name);
+                                echo json_encode($p_detail);
+                                die;
+                            } else {
+                                $max_check = $limitclass;
+                                // echo $totalamount;
+                                // echo $max_check;
+                                // die;
+                                if ($totalamount > $max_check) {
+                                    if ($limitclass < $pending_limit)
+                                        $pending_limit = $limitclass;
+                                    if ($pending_limit != $amount[$amount_index] && $pending_limit < $amount[$amount_index]) {
+                                        if ($pending_limit > 0) {
+                                            $pending_limit = number_format($pending_limit, 2);
+                                            $msg = "The maximum limit to accept is only " . $pending_limit . ", please transfer a lower amount";
+                                        } else {
+                                            $msg = $max_limit_msg;
+                                        }
+                                        $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
+
+                                        echo json_encode($p_detail);
+                                        die;
+                                    }
+
+                                }
+
+                            }
+                        } else {
+                            $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin_name);
+                            echo json_encode($p_detail);
+                            die;
+                        }
 
                     } else {
-                        // make new entry
-                        // echo "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance) VALUES ('$receiver_id', '$sender_id', '$amount')";
-                        $q1 = mysqli_query($conn, "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance,added_balance,user_mobile,coin_active,ref_coin) VALUES ('$receiver_id', '$merchant_id','$amount','$amount','$receiver_mobile','$coin_active','$ref_coin')");
-                        // $sender_amount=$amount;
-                        $new_inserted_id = mysqli_insert_id($conn);
-                        if ($new_coin_trasfer == "y") {
-                            $login_token = generatePIN();
-                            $cm = $receiver['mobile_number'];
-                            // echo "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'";
-                            // die;
-                            mysqli_query($conn, "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'");
-                            if ($cm) {
-                                if ($receiver_user_roles == 2) {
-                                    $m_url = "https://www.koofamilies.com/dashboard.php?merchant_id=" . $merchant_id . "&l=" . $login_token . "&t=" . $amount;
-                                    // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
-                                    // $msg="My dear friend, I ".$sender_name." have a gift voucher of RM".$amount." of ".$mer_name." for you. You can get it by clicking on the links. ".$m_url." . Enjoy my gift to you !!!";
-                                    $msg = "Hello, i am from " . $sender_name . ". I would like to invite you to join our community. Kindly accept my invitation by clicking on the following link." . $m_url;
-                                } else {
-                                    $m_url = "https://www.koofamilies.com/structure_merchant.php?merchant_id=" . $merchant_id . "&l=" . $login_token . "&t=" . $amount;
-                                    // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
-                                    $msg = "My dear friend, I " . $sender_name . " have a gift voucher of RM" . $amount . " of " . $mer_name . " for you. You can get it by clicking on the links. " . $m_url . " . Enjoy my gift to you !!!";
-                                }
-                                $details = "Welcome Wallet Transfer";
-                                gw_send_sms("APIHKXVL33N5E", "APIHKXVL33N5EHKXVL", "9787136232", "$cm", "$msg");
-                            }
-
-
-                        }
-                        $receiver_bal = $receiver_amount;
-
+                        $msg = "This Number is Not Accepting " . $coin;
+                        $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin);
+                        echo json_encode($p_detail);
+                        die;
                     }
-                    $sender_bal = $sender_amount = $sender_usd = floatval($sender_usd) - floatval($amount);
-                    // $sender_amount=$sender_bal;
-                    $q2 = mysqli_query($conn, "update users set balance_usd='$sender_usd' where id='$sender_id'");
+                }
+                $amount_index++;
+            }
+            $amount_index = 0;
+            foreach ($wallet_merchant_id as $coin => $merchant_id) {
+
+                if ($merchant_id == $receiver_id) {
+
+                    // coin trasfer to owner of coin holder
+                    $special_coin_sender = mysqli_fetch_assoc(mysqli_query($conn, "select * from special_coin_wallet where user_id='$sender_id' and merchant_id='$merchant_id'"));
+                    $s_wallet_id = $special_coin_sender['id'];
+                    $sender_bal = $sender_amount = floatval($special_coin_sender['coin_balance']) - floatval($amount[$amount_index]);
+                    $q1 = mysqli_query($conn, "update special_coin_wallet set coin_balance='$sender_bal' where id='$s_wallet_id'");
+                    // increase merchant bal
+                    $receiver_bal = $receiver_usd = floatval($receiver_usd) + floatval($amount[$amount_index]);
+                    $receiver_query = $receiver_query . 'balance_usd="' . $receiver_usd . '" ';
+                    $receiver_query = $receiver_query . ' WHERE id=' . $receiver_id;
+                    // die;
+                    $q2 = mysqli_query($conn, $receiver_query);
                     if ($q1 && $q2)
                         $t_flag = true;
-                    $sender_bal = $sender_usd;
                 } else {
-                    // send from user
-                    //foreach ($wallet_merchant_id as $wallet_name => $merch_id) { // Loops through all the merchants names. $wallet_merchant_id = ['WALLET NAME' => 'MERCHANT ID']
+
+
+                    // echo "dd";
+                    // die;
+
+                    // trasfer to other
+
+                    if ($merchant_send == "y") {
+                        $merchant_detail = mysqli_fetch_assoc(mysqli_query($conn, "SELECT name FROM users WHERE id='" . $merchant_id . "'"));
+                        // $mer_bal=
+                        $s_coin_name = $merchant_detail['special_coin_name'];
+                        $mer_name = $merchant_detail['name'];
+                        $special_coin = mysqli_fetch_assoc(mysqli_query($conn, "select * from special_coin_wallet where user_id='$receiver_id' and merchant_id='$merchant_id'"));
+                        // $sender_usd=$sender_usd-$amount;
+
+                        if ($special_coin['id']) {
+
+                            $receiver_bal = $receiver_amount = $new_coin = $special_coin['coin_balance'] + $amount;
+                            $total_added = $special_coin['added_balance'] + $amount;
+                            // echo "update special_coin_wallet set coin_balance='$new_coin' where user_id='$receiver_id' and merchant_id='$sender_id'";
+                            // die;
+
+                            $q1 = mysqli_query($conn, "update special_coin_wallet set coin_balance='$new_coin',added_balance='$total_added' where user_id='$receiver_id' and merchant_id='$merchant_id'");
+
+
+                        } else {
+                            // make new entry
+                            // echo "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance) VALUES ('$receiver_id', '$sender_id', '$amount')";
+                            $q1 = mysqli_query($conn, "INSERT INTO special_coin_wallet (user_id,merchant_id,coin_balance,added_balance,user_mobile,coin_active,ref_coin) VALUES ('$receiver_id', '$merchant_id','$amount','$amount','$receiver_mobile','$coin_active','$ref_coin')");
+                            // $sender_amount=$amount;
+                            $new_inserted_id = mysqli_insert_id($conn);
+                            if ($new_coin_trasfer == "y") {
+                                $login_token = generatePIN();
+                                $cm = $receiver['mobile_number'];
+                                // echo "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'";
+                                // die;
+                                mysqli_query($conn, "UPDATE `users` SET `login_token`='$login_token' WHERE `users`.`id` ='$receiver_id'");
+                                if ($cm) {
+                                    if ($receiver_user_roles == 2) {
+                                        $m_url = "https://www.koofamilies.com/dashboard.php?merchant_id=" . $merchant_id . "&l=" . $login_token . "&t=" . $amount;
+                                        // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
+                                        // $msg="My dear friend, I ".$sender_name." have a gift voucher of RM".$amount." of ".$mer_name." for you. You can get it by clicking on the links. ".$m_url." . Enjoy my gift to you !!!";
+                                        $msg = "Hello, i am from " . $sender_name . ". I would like to invite you to join our community. Kindly accept my invitation by clicking on the following link." . $m_url;
+                                    } else {
+                                        $m_url = "https://www.koofamilies.com/structure_merchant.php?merchant_id=" . $merchant_id . "&l=" . $login_token . "&t=" . $amount;
+                                        // $msg="My dear friend, I have a gift voucher of RM".$amount." of ".$mer_name."for you.You can get it by clicking on the links.".$m_url."Enjoy my gift to you !!!";
+                                        $msg = "My dear friend, I " . $sender_name . " have a gift voucher of RM" . $amount . " of " . $mer_name . " for you. You can get it by clicking on the links. " . $m_url . " . Enjoy my gift to you !!!";
+                                    }
+                                    $details = "Welcome Wallet Transfer";
+                                    gw_send_sms("APIHKXVL33N5E", "APIHKXVL33N5EHKXVL", "9787136232", "$cm", "$msg");
+                                }
+
+
+                            }
+                            $receiver_bal = $receiver_amount;
+
+                        }
+                        $sender_bal = $sender_amount = $sender_usd = floatval($sender_usd) - floatval($amount);
+                        // $sender_amount=$sender_bal;
+                        $q2 = mysqli_query($conn, "update users set balance_usd='$sender_usd' where id='$sender_id'");
+                        if ($q1 && $q2)
+                            $t_flag = true;
+                        $sender_bal = $sender_usd;
+                    } else {
+                        // send from user
+                        //foreach ($wallet_merchant_id as $wallet_name => $merch_id) { // Loops through all the merchants names. $wallet_merchant_id = ['WALLET NAME' => 'MERCHANT ID']
                         $merchant_detail = mysqli_fetch_assoc(mysqli_query($conn, "SELECT name, special_coin_name FROM users WHERE id='" . $merchant_id . "'"));
 
                         $s_coin_name = $merchant_detail['special_coin_name'];
@@ -785,23 +769,25 @@ if (isset($_POST['mobile_number'])) {
                                 $t_flag = true;
 
                         } else {
-                            $p_detail = array('status' => false, 'msg' => "Sender Dont Have Balance", 'coin_name' => $coin_name);
+                            if($coin != 'CF'){
+                                $p_detail = array('status' => false, 'msg' => "Sender Dont Have Balance", 'coin_name' => $coin_name);
 
-                            echo json_encode($p_detail);
-                            die;
+                                echo json_encode($p_detail);
+                                die;
+                            }
                         }
-                    //} // End Loop
+                        //} // End Loop
 
+
+                    }
 
                 }
+                $amount_index++;
+            } // End foreach loop
 
-            }
-            $amount_index++;
-        } // End foreach loop
-		
-		
-		  
-	}    
+
+        }
+    }
 	if($t_flag)
 	{
 		$remark='';
