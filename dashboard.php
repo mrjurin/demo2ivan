@@ -16,12 +16,12 @@ if(!empty($_GET['l'])){
 if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
 
 	$mobile = "60" . $_GET['mobile'];
-	$merchant_id = mysqli_fetch_assoc(mysqli_query($conn, "SELECT id,user_roles FROM users WHERE mobile_number = '$mobile' ORDER BY id ASC"));
 
-	if(!$merchant_id)
-		die(json_encode([]));
+	$query = mysqli_query($conn, "SELECT id,user_roles FROM users WHERE mobile_number = '$mobile' ORDER BY id ASC");
+	$exists = mysqli_num_rows($query) == 0 ? false : true;
+	$merchant_id = mysqli_fetch_assoc($query);
 
-	if($merchant_id['user_roles'] == '1'){
+	if($merchant_id['user_roles'] == '1' || !$exists){
 		die(json_encode('show_all'));
 	}else{
 		
@@ -36,9 +36,10 @@ if(isset($_GET['q']) && $_GET['q'] == 'getPartnersIds'){
 	
 		$own_coin = mysqli_fetch_assoc(mysqli_query($conn, "SELECT balance_usd,balance_myr, balance_inr FROM users WHERE id = '$merchant_id'"));
 	
-		if(floatval($own_coin['balance_usd']) > 0 || floatval($own_coin['balance_myr']) > 0 || floatval($own_coin['balance_inr']) > 0){
-			$result[] = $merchant_id;
-		}
+				if(floatval($own_coin['balance_usd']) > 0 || floatval($own_coin['balance_myr']) > 0 || floatval($own_coin['balance_inr']) > 0){
+					$result[] = $merchant_id;
+				}
+
 
 		echo json_encode($result);
 		die();
