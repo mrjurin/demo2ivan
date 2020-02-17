@@ -609,7 +609,7 @@ if (isset($_POST['mobile_number'])) {
                             die;
                         }
 
-                    } else {
+                    } else if($m_id != $receiver_id) {
                         $msg = "This Number is Not Accepting " . $coin;
                         $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin);
                         echo json_encode($p_detail);
