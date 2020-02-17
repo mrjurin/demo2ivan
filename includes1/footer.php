@@ -201,10 +201,26 @@ $(document).ready(function(){
 															// var msg="Fund Trasfer Successfully";
 															var trasfer_lang="<?php echo $_SESSION['langfile']; ?>";  
 															// alert(trasfer_lang);
-															if(trasfer_lang=="chinese")
-															var msg="RM <span class='spancls'>"+transfer_amount+"</span> 的  <span class='spancls'>"+sender_label+"</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> 于 "+time_label;	
-															else
-															var msg="RM <span class='spancls'>"+transfer_amount+"</span> of <span class='spancls'>"+sender_label+"</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> at "+time_label;
+															if(multiwallet){
+																if(trasfer_lang=="chinese"){
+																	var msg="RM <span class='spancls'>"+transfer_amount+"</span> 的  <span class='spancls'>"+sender_label+"</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> 于 "+time_label;	
+																	for(var key in transfer_wallet_type){
+																		msg += "<br>" + key + " => " + transfer_wallet_type[key];
+																	}
+																}else{
+																	var msg="RM <span class='spancls'>"+transfer_amount+"</span> of <span class='spancls'>"+sender_label+"</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> at "+time_label;
+																	msg += "<table id='wallet_sent_table'>";
+																	for(var key in transfer_wallet_type){
+																		msg += "<tr><td>" + key + "</td><td>" + transfer_wallet_type[key] + "</td></tr>";
+																	}
+																	msg += "</table>";
+																}
+															}else{
+																if(trasfer_lang=="chinese")
+																	var msg="RM <span class='spancls'>"+transfer_amount+"</span> 的  <span class='spancls'>"+sender_label+"</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> 于 "+time_label;	
+																else
+																	var msg="RM <span class='spancls'>"+transfer_amount+"</span> of <span class='spancls'>"+sender_label+"</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> at "+time_label;
+															}
 															
 															$('#show_msg_t').html(msg);
 															$('#fund_wallet_input_modal').modal('hide'); 

@@ -84,7 +84,13 @@ function partnerbal($coin_merchant_id,$conn)
 			font-weight:bold;
 			color:red;
 		}
-
+		#wallet_sent_table{
+			margin-top: 10px;
+		}
+		#wallet_sent_table td{
+			border: 1px solid black;
+			padding: 5px 15px;
+		}
 	</style>
 
 	<!-- Manifest -->
