@@ -740,6 +740,7 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 						<div class="col-md-12 form-group" data-name="${name}" data-amount="${$(this).attr("data-amount")}">
 							<label for="wallet-${$(i)}">${name} <small>(${$(this).attr("data-amount")})</small></label>
 							<input type="number" class="form-control" s_merchant_id="${merchant_id}" id="wallet-1" name="wallet_val">
+							<span class="error-block-for-wallet" style="display: none;color: red" data-wallet="${name}"></span>
 						</div>
 					`);
 				}

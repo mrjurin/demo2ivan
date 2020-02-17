@@ -571,12 +571,12 @@ if (isset($_POST['mobile_number'])) {
 
                                 $pending_limit = number_format($pending_limit, 2);
                                 $msg = "The maximum limit to accept is only " . $pending_limit . ", please transfer a lower amount for " . $coin;
-                                $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin_name);
+                                $p_detail = array('status' => false, 'msg' => $msg, 'coin_name' => $coin);
                                 echo json_encode($p_detail);
                                 die;
                             }
                             if ($limitclass <= 0) {
-                                $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin_name);
+                                $p_detail = array('status' => false, 'msg' => $max_limit_msg, 'coin_name' => $coin);
                                 echo json_encode($p_detail);
                                 die;
                             } else {

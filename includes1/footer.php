@@ -219,8 +219,16 @@ $(document).ready(function(){
 															btn.disabled = false;
 															$('#confirm_transfer').removeClass("btn-default").addClass("btn-primary");
 															// alert(data.msg);
-															$('.error-block-for-wallet-type').html(data.msg);	
-														  $('.error-block-for-wallet-type').show();	  
+															if($("#multiple_wallet").is(":checked")){
+																$(this).removeClass(" btn-default").addClass("btn-primary");
+																$('.error-block-for-wallet[data-wallet="' + data.coin_name + '"]').html(data.msg).show();
+															}else{
+																$(this).removeClass(" btn-default").addClass("btn-primary");
+																$('.error-block-for-mobile').html(data.msg);
+																$('.error-block-for-mobile').show();
+															}
+															// $('.error-block-for-wallet-type').html(data.msg);	
+															// $('.error-block-for-wallet-type').show();	  
 														}   
 														}		  
 												});
@@ -234,9 +242,14 @@ $(document).ready(function(){
 						else {
 							btn.disabled = false;
 						// btn.innerText = 'Posting...';
-						$(this).removeClass(" btn-default").addClass("btn-primary");
-							$('.error-block-for-mobile').html(objresult.msg);
-							$('.error-block-for-mobile').show();
+							if($("#multiple_wallet").is(":checked")){
+								$(this).removeClass(" btn-default").addClass("btn-primary");
+								$('.error-block-for-wallet[data-wallet="' + objresult.coin_name + '"]').html(objresult.msg).show();
+							}else{
+								$(this).removeClass(" btn-default").addClass("btn-primary");
+								$('.error-block-for-mobile').html(objresult.msg);
+								$('.error-block-for-mobile').show();
+							}
 						}
 					});
 					}
