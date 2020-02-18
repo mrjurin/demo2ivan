@@ -277,7 +277,12 @@ if (isset($_POST['mobile_number'])) {
         $amount = [];
         $wallet_coin_name = [];
         foreach($_POST['wallet_type'] as $w_name => $w_amount){
-            $wallet_coin_name[] = $w_name;
+            if($w_name == 'CF' || $w_name == 'INR' || $w_name == 'MYR'){
+                $wallet_name = mysqli_fetch_assoc(mysqli_query($conn, "SELECT special_coin_name FROM users WHERE id = '$wallet_merchant_id[$w_name]'"))['special_coin_name'];
+                $wallet_coin_name[] = $wallet_name;
+            }else{
+                $wallet_coin_name[] = $w_name;
+            }
             $amount[] = $w_amount;
         }
     }else{

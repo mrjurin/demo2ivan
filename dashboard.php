@@ -552,9 +552,9 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 								<?php 
 								
 								if($balance['balance_myr']) {?>
-									<option value="MYR" data-amount="<?=number_format($balance['balance_myr'], 2) ?>">MYR</option> <?php }  if(($balance['balance_usd']>0) && $profile_data['user_roles']=='2' && $profile_data['special_coin_name']) { ?>     
-									<option s_merchant_id="<?php echo $balance['id'];?>" data-amount="<?=number_format($balance['balance_usd'], 2) ?>" wallet_label="dynamic" merchant_no="<?php echo $balance['mobile_number']; ?>"  value="CF"><?php echo $balance['special_coin_name']."- <b>".number_format($profile_data['balance_usd'],2)."</b>";?></option> <?php } if($balance['balance_inr']) { ?>
-									<option value="INR" data-amount="<?=number_format($balance['balance_inr'], 2) ?>">KOO Coin</option><?php } 
+									<option value="MYR" data-amount="<?=number_format($balance['balance_myr'], 2) ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>">MYR</option> <?php }  if(($balance['balance_usd']>0) && $profile_data['user_roles']=='2' && $profile_data['special_coin_name']) { ?>     
+									<option s_merchant_id="<?php echo $balance['id'];?>" data-amount="<?=number_format($balance['balance_usd'], 2) ?>" wallet_label="dynamic" merchant_no="<?php echo $balance['mobile_number']; ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>"  value="CF"><?php echo $balance['special_coin_name']."- <b>".number_format($profile_data['balance_usd'],2)."</b>";?></option> <?php } if($balance['balance_inr']) { ?>
+									<option value="INR" data-amount="<?=number_format($balance['balance_inr'], 2) ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>">KOO Coin</option><?php } 
 									if(count($all_wallet)>0){
 
 									foreach($all_wallet as $wal){ 
@@ -740,13 +740,15 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 			// Add the item from the list to the UI if it's not there already
 			selected.each(function(i, val){
 				let name = $(this).val();
+				let wallet_name = (name == 'CF' || name == 'INR' || name == 'MYR') ? $(this).attr("data-wallet-name") : name;
 				let merchant_id = $(this).attr("s_merchant_id");
+				let max_amount = $(this).attr("data-amount");
 				if($("#wallet_amounts div[data-name='" + name + "']").length == 0){
 					var len = $("#wallet_amounts div[data-name='" + name + "']").length;
 					$("#wallet_amounts").append(`
 						<div class="col-md-12 form-group" data-name="${name}" data-amount="${$(this).attr("data-amount")}">
-							<label for="wallet-${$(i)}">${name} <small>(${$(this).attr("data-amount")})</small></label>
-							<input type="number" class="form-control" s_merchant_id="${merchant_id}" id="wallet-1" name="wallet_val">
+							<label for="wallet-${$(i)}">${wallet_name} <small>(${$(this).attr("data-amount")})</small></label>
+							<input type="number" class="form-control" s_merchant_id="${merchant_id}" data-max="${max_amount}" id="wallet-1" name="wallet_val">
 							<span class="error-block-for-wallet" style="display: none;color: red" data-wallet="${name}"></span>
 						</div>
 					`);
@@ -767,6 +769,9 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 			var total = 0;
 			if($(this).val() < 0){
 				$(this).val(0);
+			}
+			if($(this).val() > parseFloat($(this).attr("data-max"))){
+				$(this).val($(this).attr("data-max"));
 			}
 			$("input[name='wallet_val']").each(function(){
 				total += parseFloat(($(this).val() == '') ? 0 : $(this).val());

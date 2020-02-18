@@ -273,15 +273,25 @@ if(!$tx_history_data)
 								<tr>
 									<?php 
 									if($tx_history_row['wallet'] == "INR")
-							{
-								$wat = "KOO COIN";
-							}
-							else
-							{
-								$wat = $tx_history_row['wallet']; 
-							}
-							
-							?>
+                                    {
+                                        $wat = "KOO COIN";
+                                    }
+                                    else
+                                    {
+                                        $wat = $tx_history_row['wallet'];
+                                        if(sizeof(explode(",", $wat)) > 1){
+                                            $trans_id = $tx_history_row['id'];
+                                            $sql = mysqli_query($conn, "SELECT * FROM transfer_multi_wallet WHERE transfer_id = '$trans_id'");
+                                            $wat = '';
+                                            while($row = mysqli_fetch_assoc($sql)){
+                                                $m_id = $row['merchant'];
+                                                $merchant_coin = mysqli_fetch_assoc(mysqli_query($conn, "SELECT special_coin_name FROM users WHERE id = '$m_id'"))['special_coin_name'];
+                                                $wat .= $merchant_coin . " " . number_format(floatval($row['amount']), 2) . "<br>";
+                                            }
+                                        }
+                                    }
+
+                                    ?>
 									<td><?php echo $tx_history_row['id']; ?></td>
 									<td><?php if($tx_history_row['invoice_no']){ echo $invo;} ?></td>
 									<td><?php if($type_method=="topup"){ echo "SELF TOPUP";} else {echo $tx_history_row['name'];} ?></td>

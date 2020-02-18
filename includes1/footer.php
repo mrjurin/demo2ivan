@@ -79,8 +79,10 @@ $(document).ready(function(){
 			$("#wallet_amounts input").each(function(){
 				var name = $(this).parent().attr("data-name");
 				var value = $(this).val();
-				wallet_merchant_id[name] = $(this).attr("s_merchant_id");
-				transfer_wallet_type[name] = $(this).val();
+				if(value != '' && value != 0){
+					wallet_merchant_id[name] = $(this).attr("s_merchant_id");
+					transfer_wallet_type[name] = $(this).val();
+				}
 			});
 
 		}else{
@@ -204,16 +206,26 @@ $(document).ready(function(){
 															if(multiwallet){
 																if(trasfer_lang=="chinese"){
 																	var msg="RM <span class='spancls'>"+transfer_amount+"</span> 的  <span class='spancls'>"+sender_label+"</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> 于 "+time_label;	
-																	for(var key in transfer_wallet_type){
-																		msg += "<br>" + key + " => " + transfer_wallet_type[key];
+																	msg += "<table id='wallet_sent_table'>";
+																	if(sender_label.length > 1){
+																		let index = 0;
+																		for(var key in transfer_wallet_type){
+																			msg += "<tr><td>" + sender_label[index] + "</td><td>" + transfer_wallet_type[key] + "</td></tr>";
+																			index++;
+																		}
+																		msg += "</table>";
 																	}
 																}else{
 																	var msg="RM <span class='spancls'>"+transfer_amount+"</span> of <span class='spancls'>"+sender_label+"</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>"+reciver_label+"</span> at "+time_label;
-																	msg += "<table id='wallet_sent_table'>";
-																	for(var key in transfer_wallet_type){
-																		msg += "<tr><td>" + key + "</td><td>" + transfer_wallet_type[key] + "</td></tr>";
+																	if(sender_label.length > 1){
+																		msg += "<table id='wallet_sent_table'>";
+																		let index = 0;
+																		for(var key in transfer_wallet_type){
+																			msg += "<tr><td>" + sender_label[index] + "</td><td>" + transfer_wallet_type[key] + "</td></tr>";
+																			index++;
+																		}
+																		msg += "</table>";
 																	}
-																	msg += "</table>";
 																}
 															}else{
 																if(trasfer_lang=="chinese")
