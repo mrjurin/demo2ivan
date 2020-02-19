@@ -105,34 +105,79 @@ function partnerbal($coin_merchant_id,$conn)
 		   // print_R($profile_data);
 				// die;
 			 $login_user_id=$_SESSION['login'];
-			$lastt="select t.sender_id,t.amount,t.created_on,s.name as sender_name,s.mobile_number as sender_mobile,r.name as receiver_name,r.mobile_number as reciver_mobile,w.special_coin_name from tranfer as t inner join users as s on s.id=t.sender_id 
-			inner join users as r on r.id=t.receiver_id inner join users as w on w.id=t.coin_merchant_id where (t.sender_id='$login_user_id' or t.receiver_id='$login_user_id') order by t.id desc limit 0,1";
-            $lastq=mysqli_query($conn,$lastt);
+			$lastt = "select t.*,s.mobile_number as sender_mobile,r.name as receiver_name,r.mobile_number as reciver_mobile from tranfer as t inner join users as s on s.id=t.sender_id inner join users as r on r.id=t.receiver_id where (t.sender_id='5326' or t.receiver_id='5326') order by t.id desc limit 0,1";
+			$lastq=mysqli_query($conn,$lastt);
 			$l=mysqli_fetch_assoc($lastq);
 			if($l)
 			{
+                if($l['coin_merchant_id'] == 0 && $l['details'] == 'Multi-wallet Transfer'){
+                    $multi_transfer = true;
+                    $transfers = mysqli_query($conn, "SELECT transfer_multi_wallet.*, users.special_coin_name FROM transfer_multi_wallet INNER JOIN users ON users.id = transfer_multi_wallet.merchant WHERE transfer_id = '$l[id]'");
+                    $transfers_arr = [];
+                    while($row = mysqli_fetch_assoc($transfers)){
+                        $transfers_arr[] = $row;
+                    }
+                }else{
+                    $lastt="select t.sender_id,t.amount,t.created_on,s.name as sender_name,s.mobile_number as sender_mobile,r.name as receiver_name,r.mobile_number as reciver_mobile,w.special_coin_name from tranfer as t inner join users as s on s.id=t.sender_id inner join users as r on r.id=t.receiver_id inner join users as w on w.id=t.coin_merchant_id where (t.sender_id='$login_user_id' or t.receiver_id='$login_user_id') order by t.id desc limit 0,1";
+                    $l=mysqli_fetch_assoc(mysqli_query($conn, $lastt));
+                }
 				if($l['sender_name']=='')
 					$l['sender_name']=$l['sender_mobile'];
 				if($l['receiver_name']=='')
 					$l['receiver_name']=$l['reciver_mobile'];
 				$date_label=$l['created_on'];
 				$time_label=date('h:i A',$date_label)." on ".date('d/m/Y',$date_label);
-				if($login_user_id==$l['sender_id'])
-				{
-					if($_SESSION['langfile']=="chinese")
-					$s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> 于 ".$time_label;
-					else
-					$s_msg="RM <span class='spancls'>".$l['amount']."</span> of <span class='spancls'>".$l['special_coin_name']."</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> at ".$time_label;
-				
-				}
-				else
-				{
-					if($_SESSION['langfile']=="chinese")
-					// $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> 于 ".$time_label;
-				    $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已成功从 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span>在 ".$time_label." 加载";
-					else
-					$s_msg="RM <span class='spancls'>".$l['amount']."</span> of <span class='spancls'>".$l['special_coin_name']."</span> has been successfully Received From  <span class='spancls' style='color:#51d2b7;'>".$l['sender_name']."</span> at ".$time_label;   
-				}
+				if(!$multi_transfer){
+                    if($login_user_id==$l['sender_id'])
+                    {
+                        if($_SESSION['langfile']=="chinese")
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> 于 ".$time_label;
+                        else
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> of <span class='spancls'>".$l['special_coin_name']."</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> at ".$time_label;
+
+                    }
+                    else
+                    {
+                        if($_SESSION['langfile']=="chinese")
+                            // $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> 于 ".$time_label;
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已成功从 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span>在 ".$time_label." 加载";
+                        else
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> of <span class='spancls'>".$l['special_coin_name']."</span> has been successfully Received From  <span class='spancls' style='color:#51d2b7;'>".$l['sender_name']."</span> at ".$time_label;
+                    }
+                }else{
+                    if($login_user_id==$l['sender_id'])
+                    {
+                        $wallets = [];
+                        $full_wallets = [];
+                        foreach($transfers_arr as $tra){
+                            $foo = [];
+                            $foo['wallet'] = $tra['special_coin_name'];
+                            $foo['amount'] = $tra['amount'];
+
+                            $wallets[] = $tra['special_coin_name'];
+                            $full_wallets[] = $foo;
+                        }
+                        if($_SESSION['langfile']=="chinese")
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>". implode(",", $wallets) ."</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> 于 ".$time_label;
+                        else
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> of <span class='spancls'>". implode(",", $wallets) ."</span> has been successfully transfer to <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> at ".$time_label;
+
+                        if(sizeof($wallets) > 1){
+                            $s_msg .= "<hr>";
+                            foreach($full_wallets as $walt){
+                                $s_msg .= "{$walt['wallet']} {$walt['amount']}<br>";
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if($_SESSION['langfile']=="chinese")
+                            // $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".$l['special_coin_name']."</span> 已经成功装入 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span> 于 ".$time_label;
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> 的 <span class='spancls'>".implode(",", $wallets)."</span> 已成功从 <span class='spancls' style='color:#51d2b7;'>".$l['receiver_name']."</span>在 ".$time_label." 加载";
+                        else
+                            $s_msg="RM <span class='spancls'>".$l['amount']."</span> of <span class='spancls'>".implode(",", $wallets)."</span> has been successfully Received From  <span class='spancls' style='color:#51d2b7;'>".$l['sender_name']."</span> at ".$time_label;
+                    }
+                }
 			}
 			if($_SESSION['login'])
 		//if($_COOKIE['PHPSESSID'])
@@ -341,7 +386,7 @@ function partnerbal($coin_merchant_id,$conn)
 
 <!--a href="transaction_history.php" class="btn btn-primary"><?php echo $language['transaction_history']; ?></a!-->
 <div id="fund_user_model" class="modal fade" role="dialog">
-	<div class="modal-dialog">
+	<div class="modal-dialog modal-dialog-scrollable">
 		<!-- Modal content-->
 		<div class="modal-content">
 			<div class="modal-header">
@@ -564,7 +609,7 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 							</select>
 							</div>
 
-							<div class="mb-2">
+							<div class="mb-2" style="max-height: 30vh;overflow-y: auto;">
 								<div class="row" id="wallet_amounts">
 									<!-- It will be auto-filled -->
 								</div>
