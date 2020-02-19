@@ -105,7 +105,7 @@ function partnerbal($coin_merchant_id,$conn)
 		   // print_R($profile_data);
 				// die;
 			 $login_user_id=$_SESSION['login'];
-			$lastt = "select t.*,s.mobile_number as sender_mobile,r.name as receiver_name,r.mobile_number as reciver_mobile from tranfer as t inner join users as s on s.id=t.sender_id inner join users as r on r.id=t.receiver_id where (t.sender_id='5326' or t.receiver_id='5326') order by t.id desc limit 0,1";
+			$lastt = "select t.*,s.mobile_number as sender_mobile,r.name as receiver_name,r.mobile_number as reciver_mobile from tranfer as t inner join users as s on s.id=t.sender_id inner join users as r on r.id=t.receiver_id where (t.sender_id='$login_user_id' or t.receiver_id='$login_user_id') order by t.id desc limit 0,1";
 			$lastq=mysqli_query($conn,$lastt);
 			$l=mysqli_fetch_assoc($lastq);
 			if($l)
