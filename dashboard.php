@@ -592,6 +592,7 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 								</select>
 							</div>
 
+							<span id="error_must_fill_no" style="display: none;"><b style="color: #f00;">You must fill up the phone number before selecting any wallet!</b></span>
 							<div class="input-group mb-2" style="display: none;">
 								<select multiple id="transfer_wallet_type_multiple" style="width:100%">
 								<?php 
@@ -736,13 +737,20 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 		$("#transfer_wallet_type_multiple").multipleSelect({
 			selectAll: false
 		});
-		$("#transfer_wallet_type_multiple").multipleSelect("disable");
+		$("#transfer_wallet_type_multiple").multipleSelect("disable").hide();
 
 		$("#multiple_wallet").on("change", function(){
 			var val = $(this).is(":checked");
+			var telVal = $("#transfer_to").val();
 			if(val == true){
+				if(telVal !== ''){
+					$("#transfer_wallet_type_multiple").show();
+					$("#error_must_fill_no").hide();
+				}else{
+					$("#transfer_wallet_type_multiple").hide();
+					$("#error_must_fill_no").show();
+				}
 				$("#transfer_wallet_type").parent().hide();
-				$("#transfer_wallet_type_multiple").parent().show();
 				$("#wallet_amounts").show();
 				$("#autofill-wallets").show();
 			}else{
@@ -750,6 +758,7 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 				$("#wallet_amounts").hide();
 				$("#transfer_wallet_type_multiple").parent().hide();
 				$("#autofill-wallets").hide();
+				$("#error_must_fill_no").hide();
 			}
 		});
 
@@ -1004,6 +1013,21 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 		  
 	  // }
 	// });
+		
+	$("#transfer_to").on("focusout", function() {
+		var multi_wallet = $("#multiple_wallet").is(":checked");
+		var $this = $(this);
+		if(multi_wallet){
+			if($this.val() == ''){
+				$("#transfer_wallet_type_multiple").hide();
+				$("#error_must_fill_no").show();
+			}else if($this.val != ''){
+				$("#transfer_wallet_type_multiple").show();
+				$("#error_must_fill_no").hide();
+			}
+		}
+	})
+
 	$('#self_topup').click(function () {
 		$('#self_topup', this).attr('disabled', 'disabled');      
 		var topup_amount=$('#topup_amount').val();
