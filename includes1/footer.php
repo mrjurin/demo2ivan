@@ -354,8 +354,7 @@ $(document).ready(function(){
 
 	$("#transfer_to").focusout(function(){
 		var number = $('#transfer_to').val();
-		// alert(number.length);
-		// if(number.length >= 9 && number.length <= 14){
+
 		if(number.length >= 9 && number.length <= 12 && (number[0] == 1 || number[0]==6)){
 			$('.error-block-for-mobile').hide();
 			var partners = [];
@@ -374,31 +373,33 @@ $(document).ready(function(){
 				if(partners == 'show_all'){
 					$("#transfer_wallet_type_multiple option").each(function(){
 						var name = $(this).val();
-						$(".ms-drop input[value='" + name + "']").parent().parent().show();
+						$(this).show();
 					});
-					$("#transfer_wallet_type_multiple").multipleSelect("enable");
 				}else{
 					var foundValues = 0;
-					$("#transfer_wallet_type_multiple option").each(function(){
-						var merchant = $(this).attr("s_merchant_id");
+					let isMultiWalletActive = $("#multiple_wallet").is(":checked");
+
+					$("#wallet_amounts > div").each(function(){
+						var merchant = $(this).attr("data-wallet-id");
 						var is_in = ($.inArray(merchant, partners) == -1) ? false : true;
 						var name = $(this).val();
 						console.log(merchant);
 						if(is_in){
-							$(".ms-drop input[value='" + name + "']").parent().parent().show();
+							$(this).show();
 							console.log($(this).val() + " is now showing");
 							foundValues++;
 						}else{
-							$(".ms-drop input[value='" + name + "']").parent().parent().hide();
+							$(this).hide();
 							console.log($(this).val() + " is now hidden");
-						}
-						if(foundValues != 0){
-							$("#transfer_wallet_type_multiple").multipleSelect("enable");
-						}else{
-							$("#transfer_wallet_type_multiple").multipleSelect("disable");
 						}
 						console.log("-------------");
 					});
+
+					if(isMultiWalletActive)
+						$("#wallet_amounts").show();
+					else
+						$("#wallet_amounts").hide();
+
 				}
 
 			});
@@ -439,6 +440,7 @@ $(document).ready(function(){
 		{ 
 			$('.error-block-for-mobile').html("Wrong mobile no. entered");
 			$('.error-block-for-mobile').show();
+			$("#wallet_amounts").hide();
 		}
     });
 	$('.final_done').click(function (){

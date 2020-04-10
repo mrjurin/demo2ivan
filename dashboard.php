@@ -593,25 +593,40 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 							</div>
 
 							<span id="error_must_fill_no" style="display: none;"><b style="color: #f00;">You must fill up the phone number before selecting any wallet!</b></span>
-							<div class="input-group mb-2" style="display: none;">
+							<!-- <div class="input-group mb-2" style="display: none;">
 								<select multiple id="transfer_wallet_type_multiple" style="width:100%">
+							</select> -->
+							<!-- </div> -->
+
+							<div class="mb-2" style="max-height: 30vh;overflow-y: auto;">
+								<div class="row" id="wallet_amounts" style="display: none;">
 								<?php 
 								
 								if($balance['balance_myr']) {?>
+									<?php 
+										var_dump($balance);/*
+									?>
+
 									<option value="MYR" data-amount="<?=number_format($balance['balance_myr'], 2) ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>">MYR</option> <?php }  if(($balance['balance_usd']>0) && $profile_data['user_roles']=='2' && $profile_data['special_coin_name']) { ?>     
 									<option s_merchant_id="<?php echo $balance['id'];?>" data-amount="<?=number_format($balance['balance_usd'], 2) ?>" wallet_label="dynamic" merchant_no="<?php echo $balance['mobile_number']; ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>"  value="CF"><?php echo $balance['special_coin_name']."- <b>".number_format($profile_data['balance_usd'],2)."</b>";?></option> <?php } if($balance['balance_inr']) { ?>
-									<option value="INR" data-amount="<?=number_format($balance['balance_inr'], 2) ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>">KOO Coin</option><?php } 
+									<option value="INR" data-amount="<?=number_format($balance['balance_inr'], 2) ?>" data-wallet-name="<?=$balance['special_coin_name'] ?>">KOO Coin</option><?php */ 
+								} 
 									if(count($all_wallet)>0){
-
-									foreach($all_wallet as $wal){ 
-										if($wal['coin_balance']){?>
-										<option  s_merchant_id="<?php echo $wal['merchant_id'];?>" data-amount="<?=number_format($wal['coin_balance'],2) ?>" data-wallet-id="<?=$wal['id'] ?>" wallet_label="dynamic" merchant_no="<?php echo $wal['merchant_no']; ?>"  value="<?php  echo $wal['special_coin_name'];?>"><?php  echo $wal['special_coin_name']."- <b>".number_format($wal['coin_balance'],2)."</b>";?></option>  
-								<?php } } }  ?>
-							</select>
-							</div>
-
-							<div class="mb-2" style="max-height: 30vh;overflow-y: auto;">
-								<div class="row" id="wallet_amounts">
+										$i = 0;
+										foreach($all_wallet as $wal){
+											if($wal['coin_balance']){?>
+												<div class="col-md-12 form-group" data-name="<?=$wal['special_coin_name'] ?>" data-wallet-id="<?=$wal['merchant_id'] ?>" data-amount="<?=number_format($wal['coin_balance'],2) ?>">
+													<label for="wallet-<?=$i ?>"><?=$wal['special_coin_name'] ?> <small>(<?=number_format($wal['coin_balance'],2) ?>)</small></label>
+													<input type="number" class="form-control" s_merchant_id="<?=$wal['merchant_id'] ?>" data-max="<?=number_format($wal['coin_balance'],2) ?>" id="wallet-<?=$i ?>" name="wallet_val">
+													<span class="error-block-for-wallet" style="display: none;color: red" data-wallet="<?=$wal['special_coin_name'] ?>"></span>
+												</div>
+											<!-- <option  s_merchant_id="<?php echo $wal['merchant_id'];?>" data-amount="<?=number_format($wal['coin_balance'],2) ?>" data-wallet-id="<?=$wal['id'] ?>" wallet_label="dynamic" merchant_no="<?php echo $wal['merchant_no']; ?>"  value="<?php  echo $wal['special_coin_name'];?>"><?php  echo $wal['special_coin_name']."- <b>".number_format($wal['coin_balance'],2)."</b>";?></option>   -->
+								<?php 
+											} 
+											$i++;
+										}
+									}
+								?>
 									<!-- It will be auto-filled -->
 								</div>
 							</div>
@@ -746,12 +761,13 @@ $old_phone = 'SELECT users.mobile_number FROM users inner join transfer on trans
 				if(telVal !== ''){
 					$("#transfer_wallet_type_multiple").show();
 					$("#error_must_fill_no").hide();
+					$("#wallet_amounts").show();
 				}else{
 					$("#transfer_wallet_type_multiple").hide();
 					$("#error_must_fill_no").show();
+					$("#wallet_amounts").hide();
 				}
 				$("#transfer_wallet_type").parent().hide();
-				$("#wallet_amounts").show();
 				$("#autofill-wallets").show();
 			}else{
 				$("#transfer_wallet_type").parent().show();
